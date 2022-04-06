@@ -4,8 +4,10 @@
 // </copyright>
 
 using System;
+using System.IO;
 using System.Reflection;
 using Fclp;
+using Telegraph.Net;
 
 namespace GingerTG
 {
@@ -51,7 +53,87 @@ namespace GingerTG
                 // Create account
                 case "createAccount":
 
-                    // TODO Create account
+                    /* Parse arguments */
+
+                    // Fluent
+                    var createAccountParser = new FluentCommandLineParser<CreateAccountArguments>();
+
+                    // short_name
+                    createAccountParser.Setup(arg => arg.ShortName)
+                        .As('s', "short-name")
+                        .Required();
+
+                    // author_name
+                    createAccountParser.Setup(arg => arg.AuthorName)
+                        .As('n', "author-name");
+
+                    // author_url
+                    createAccountParser.Setup(arg => arg.AuthorUrl)
+                        .As('u', "author-url");
+
+                    // Parse
+                    var createAccountParserResult = createAccountParser.Parse(args);
+
+                    // Check for errors
+                    if (createAccountParserResult.HasErrors)
+                    {
+                        // Advise user
+                        Console.WriteLine(createAccountParserResult.ErrorText);
+
+                        // Halt flow
+                        return;
+                    }
+
+                    /* Create account */
+
+                    // Advise user
+                    Console.WriteLine("Creating account...");
+
+                    try
+                    {
+                        // Set telegraph client
+                        var client = new TelegraphClient();
+
+                        // Create account
+                        var account = client.CreateAccountAsync(createAccountParser.Object.ShortName, createAccountParser.Object.AuthorName, createAccountParser.Object.AuthorUrl);
+
+                        // Check if OK
+                        if (account.Result.AccessToken.Length > 0)
+                        {
+                            // Set account data
+                            string accountData =
+                            $"short_name: {account.Result.ShortName}{Environment.NewLine}" +
+                            $"author_name: {account.Result.AuthorName}{Environment.NewLine}" +
+                            $"author_url: {account.Result.AuthorUrl}{Environment.NewLine}" +
+                            $"access_token: {account.Result.AccessToken}{Environment.NewLine}" +
+                            $"auth_url: {account.Result.AuthorizationUrl}";
+
+                            // Set message
+                            string createAccountMessage = $"{Environment.NewLine}{Environment.NewLine}{DateTime.Now}{Environment.NewLine}{accountData}";
+
+                            // Save account data to disk
+                            File.AppendAllText("GingerTG-Accounts.txt", createAccountMessage);
+
+                            // Advise user
+                            Console.WriteLine($"Account created.{createAccountMessage}");
+                        }
+                        else
+                        {
+                            // Throw exception with error message
+                            throw new Exception("No access token returned.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Advise user
+                        Console.WriteLine($"Create account error: {ex.Message}");
+
+                        // Log to file
+                        File.AppendAllText("GingerTG-ErrorLog.txt", $"{Environment.NewLine}{Environment.NewLine}{DateTime.Now}{Environment.NewLine}Create account error: { ex.Message}");
+
+                        // Halt flow
+                        return;
+                    }
 
                     break;
 
