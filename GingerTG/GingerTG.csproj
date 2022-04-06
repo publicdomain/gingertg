@@ -46,6 +46,7 @@
     <Compile Include="CreateAccountArguments.cs" />
     <Compile Include="CreatePageArguments.cs" />
     <Compile Include="EditPageArguments.cs" />
+    <Compile Include="GetViewsArguments.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resources\" />

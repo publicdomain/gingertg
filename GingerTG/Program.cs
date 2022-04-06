@@ -17,6 +17,11 @@ namespace GingerTG
     {
         public static void Main(string[] args)
         {
+            // SSL fix
+            /*System.Net.ServicePointManager.Expect100Continue = true;
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+            System.Net.ServicePointManager.ServerCertificateValidationCallback = delegate { return true; }; // DEBUG, Linux*/
+
             // Set version for generating semantic version 
             Version version = typeof(MainClass).GetTypeInfo().Assembly.GetName().Version;
 
@@ -111,7 +116,7 @@ namespace GingerTG
                             $"auth_url: {account.Result.AuthorizationUrl}";
 
                             // Set message
-                            string createAccountMessage = $"{Environment.NewLine}{Environment.NewLine}{DateTime.Now}{Environment.NewLine}{accountData}";
+                            string createAccountMessage = $"{Environment.NewLine}{Environment.NewLine}Create account / {DateTime.Now}{Environment.NewLine}{accountData}";
 
                             // Save account data to disk
                             File.AppendAllText("GingerTG-Accounts.txt", createAccountMessage);
@@ -199,20 +204,16 @@ namespace GingerTG
                     try
                     {
                         // Set telegraph client
-                        var client = new TelegraphClient();
+                        var createPageClient = new TelegraphClient();
 
                         // Set token client
-                        ITokenClient tokenClient = client.GetTokenClient(createPageParser.Object.AccessToken);
+                        ITokenClient tokenClient = createPageClient.GetTokenClient(createPageParser.Object.AccessToken);
 
                         // Set nodes
-                        var nodes = new List<NodeElement>();
-                        nodes.Add(
-                            new NodeElement("p",
-                                null,
-                                createPageParser.Object.Content,
-                                null
-                            )
-                        );
+                        var nodes = new List<NodeElement>
+                        {
+                            new NodeElement(createPageParser.Object.Content)
+                        };
 
                         // Set content
                         NodeElement[] content = nodes.ToArray();
@@ -336,20 +337,16 @@ namespace GingerTG
                     try
                     {
                         // Set telegraph client
-                        var client = new TelegraphClient();
+                        var editPageClient = new TelegraphClient();
 
                         // Set token client
-                        ITokenClient tokenClient = client.GetTokenClient(editPageParser.Object.AccessToken);
+                        ITokenClient tokenClient = editPageClient.GetTokenClient(editPageParser.Object.AccessToken);
 
                         // Set nodes
-                        var nodes = new List<NodeElement>();
-                        nodes.Add(
-                            new NodeElement("p",
-                                null,
-                                editPageParser.Object.Content,
-                                null
-                            )
-                        );
+                        var nodes = new List<NodeElement>
+                        {
+                            new NodeElement(editPageParser.Object.Content)
+                        };
 
                         // Set content
                         NodeElement[] content = nodes.ToArray();
@@ -419,7 +416,89 @@ namespace GingerTG
                 // Get views
                 case "getViews":
 
-                    // TODO Add code
+                    /* Parse arguments */
+
+                    // Fluent
+                    var getViewsParser = new FluentCommandLineParser<GetViewsArguments>();
+
+                    // short_name
+                    getViewsParser.Setup(arg => arg.ShortName)
+                        .As('s', "short-name");
+
+                    // Path
+                    getViewsParser.Setup(arg => arg.Path)
+                        .As('p', "path")
+                        .Required();
+
+                    // Year
+                    getViewsParser.Setup(arg => arg.Year)
+                       .As('y', "year");
+
+                    // Month
+                    getViewsParser.Setup(arg => arg.Month)
+                       .As('m', "month");
+
+                    // Day
+                    getViewsParser.Setup(arg => arg.Day)
+                       .As('d', "day");
+
+                    // Hour
+                    getViewsParser.Setup(arg => arg.Hour)
+                       .As('h', "hour");
+
+                    // Parse
+                    var getViewsParserResult = getViewsParser.Parse(args);
+
+                    // Check for errors
+                    if (getViewsParserResult.HasErrors)
+                    {
+                        // Advise user
+                        Console.WriteLine(getViewsParserResult.ErrorText);
+
+                        // Halt flow
+                        return;
+                    }
+
+                    /* Page views */
+
+                    // Advise user
+                    Console.WriteLine("Getting page views...");
+
+                    try
+                    {
+                        // Set telegraph client
+                        var getViewsClient = new TelegraphClient();
+
+                        // Get pageViews object
+                        var pageViews = await getViewsClient.GetViewsAsync(getViewsParser.Object.Path, getViewsParser.Object.Year, getViewsParser.Object.Month, getViewsParser.Object.Day, getViewsParser.Object.Hour);
+
+                        // Get actual views integer
+                        int views = pageViews.Views;
+
+                        // Set views data
+                        string viewsData =
+                        $"views: {views}";
+
+                        // Set message
+                        string pageViewsMessage = $"{Environment.NewLine}{Environment.NewLine}Get views / {DateTime.Now}{Environment.NewLine}{viewsData}";
+
+                        // Save account data to disk
+                        File.AppendAllText("GingerTG-success.txt", pageViewsMessage);
+
+                        // Advise user
+                        Console.WriteLine($"Page views fetched.{pageViewsMessage}");
+                    }
+                    catch (Exception ex)
+                    {
+                        // Advise user
+                        Console.WriteLine($"Get views error: {ex.Message}");
+
+                        // Log to file
+                        File.AppendAllText("GingerTG-ErrorLog.txt", $"{Environment.NewLine}{Environment.NewLine}{DateTime.Now}{Environment.NewLine}Get views error: { ex.Message}");
+
+                        // Halt flow
+                        return;
+                    }
 
                     break;
 
