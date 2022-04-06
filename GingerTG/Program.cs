@@ -218,7 +218,7 @@ namespace GingerTG
                         NodeElement[] content = nodes.ToArray();
 
                         // Create page
-                        Page page = await tokenClient.CreatePageAsync(
+                        Page createdPage = await tokenClient.CreatePageAsync(
                           createPageParser.Object.Title,
                           content,
                           createPageParser.Object.AuthorName,
@@ -227,29 +227,29 @@ namespace GingerTG
                         );
 
                         // Check if OK
-                        if (page.Path.Length > 0)
+                        if (createdPage.Path.Length > 0)
                         {
-                            // Set page data
-                            string pageData =
-                            $"path: {page.Path}{Environment.NewLine}" +
-                            $"url: {page.Url}{Environment.NewLine}" +
-                            $"title: {page.Title}{Environment.NewLine}" +
-                            $"description: {page.Description}{Environment.NewLine}" +
-                            $"author_name: {page.AuthorName}{Environment.NewLine}" +
-                            $"author_url: {page.AuthorUrl}{Environment.NewLine}" +
-                            $"image_url: {page.ImageUrl}{Environment.NewLine}" +
-                            $"content: {page.Content.ToString()}{Environment.NewLine}" +
-                            $"views: {page.Views}{Environment.NewLine}" +
-                            $"can_edit: {page.CanEdit}{Environment.NewLine}";
+                            // Set created page data
+                            string createdPageData =
+                            $"path: {createdPage.Path}{Environment.NewLine}" +
+                            $"url: {createdPage.Url}{Environment.NewLine}" +
+                            $"title: {createdPage.Title}{Environment.NewLine}" +
+                            $"description: {createdPage.Description}{Environment.NewLine}" +
+                            $"author_name: {createdPage.AuthorName}{Environment.NewLine}" +
+                            $"author_url: {createdPage.AuthorUrl}{Environment.NewLine}" +
+                            $"image_url: {createdPage.ImageUrl}{Environment.NewLine}" +
+                            $"content: {createdPage.Content.ToString()}{Environment.NewLine}" +
+                            $"views: {createdPage.Views}{Environment.NewLine}" +
+                            $"can_edit: {createdPage.CanEdit}{Environment.NewLine}";
 
                             // Set message
-                            string createPageMessage = $"{Environment.NewLine}{Environment.NewLine}{DateTime.Now}{Environment.NewLine}{pageData}";
+                            string createPageMessage = $"{Environment.NewLine}{Environment.NewLine}createPage / {DateTime.Now}{Environment.NewLine}{createdPageData}";
 
                             // Save page data to disk
                             File.AppendAllText("GingerTG-Success.txt", createPageMessage);
 
                             // Advise user
-                            Console.WriteLine($"Page created.{pageData}");
+                            Console.WriteLine($"Page created.{createdPageData}");
                         }
                         else
                         {
@@ -274,7 +274,152 @@ namespace GingerTG
                 // Edit page
                 case "editPage":
 
-                    // TODO Edit page
+                    /* Parse arguments */
+
+                    // Fluent
+                    var editPageParser = new FluentCommandLineParser<EditPageArguments>();
+
+                    // short_name
+                    editPageParser.Setup(arg => arg.ShortName)
+                        .As('s', "short-name");
+
+                    // access_token
+                    editPageParser.Setup(arg => arg.AccessToken)
+                        .As('p', "access-token")
+                        .Required();
+
+                    // Path
+                    editPageParser.Setup(arg => arg.Path)
+                        .As('p', "path")
+                        .Required();
+
+                    // title
+                    editPageParser.Setup(arg => arg.Title)
+                        .As('t', "title")
+                        .Required();
+
+                    // content
+                    editPageParser.Setup(arg => arg.Content)
+                        .As('c', "content")
+                        .Required();
+
+                    // author_name
+                    editPageParser.Setup(arg => arg.AuthorName)
+                        .As('n', "author-name");
+
+                    // author_url
+                    editPageParser.Setup(arg => arg.AuthorUrl)
+                        .As('u', "author-url");
+
+                    // return_content
+                    editPageParser.Setup(arg => arg.ReturnContent)
+                        .As('r', "return-content");
+
+                    // Parse
+                    var editPageParserResult = editPageParser.Parse(args);
+
+                    // Check for errors
+                    if (editPageParserResult.HasErrors)
+                    {
+                        // Advise user
+                        Console.WriteLine(editPageParserResult.ErrorText);
+
+                        // Halt flow
+                        return;
+                    }
+
+                    /* Edit page */
+
+                    // Advise user
+                    Console.WriteLine("Editing page...");
+
+                    try
+                    {
+                        // Set telegraph client
+                        var client = new TelegraphClient();
+
+                        // Set token client
+                        ITokenClient tokenClient = client.GetTokenClient(editPageParser.Object.AccessToken);
+
+                        // Set nodes
+                        var nodes = new List<NodeElement>();
+                        nodes.Add(
+                            new NodeElement("p",
+                                null,
+                                editPageParser.Object.Content,
+                                null
+                            )
+                        );
+
+                        // Set content
+                        NodeElement[] content = nodes.ToArray();
+
+                        // Edit page
+                        Page editedPage = await tokenClient.EditPageAsync(
+                        editPageParser.Object.Path,
+                        editPageParser.Object.Title,
+                        content,
+                        editPageParser.Object.AuthorName,
+                        editPageParser.Object.AuthorUrl,
+                        editPageParser.Object.ReturnContent
+                        );
+
+                        // Check if OK
+                        if (editedPage.Path.Length > 0)
+                        {
+                            // Set page data
+                            string editedPageData =
+                            $"path: {editedPage.Path}{Environment.NewLine}" +
+                            $"url: {editedPage.Url}{Environment.NewLine}" +
+                            $"title: {editedPage.Title}{Environment.NewLine}" +
+                            $"description: {editedPage.Description}{Environment.NewLine}" +
+                            $"author_name: {editedPage.AuthorName}{Environment.NewLine}" +
+                            $"author_url: {editedPage.AuthorUrl}{Environment.NewLine}" +
+                            $"image_url: {editedPage.ImageUrl}{Environment.NewLine}" +
+                            $"content: {editedPage.Content.ToString()}{Environment.NewLine}" +
+                            $"views: {editedPage.Views}{Environment.NewLine}" +
+                            $"can_edit: {editedPage.CanEdit}{Environment.NewLine}";
+
+                            // Set message
+                            string editPageMessage = $"{Environment.NewLine}{Environment.NewLine}editPage / {DateTime.Now}{Environment.NewLine}{editedPageData}";
+
+                            // Save page data to disk
+                            File.AppendAllText("GingerTG-Success.txt", editPageMessage);
+
+                            // Advise user
+                            Console.WriteLine($"Page edited.{editedPageData}");
+                        }
+                        else
+                        {
+                            // Throw exception with error message
+                            throw new Exception("No page path returned.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Advise user
+                        Console.WriteLine($"Edit page error: {ex.Message}");
+
+                        // Log to file
+                        File.AppendAllText("GingerTG-ErrorLog.txt", $"{Environment.NewLine}{Environment.NewLine}{DateTime.Now}{Environment.NewLine}Edit page error: { ex.Message}");
+
+                        // Halt flow
+                        return;
+                    }
+
+                    break;
+
+                // Get account info
+                case "getAccountInfo":
+
+                    // TODO Add code
+
+                    break;
+
+                // Get views
+                case "getViews":
+
+                    // TODO Add code
 
                     break;
 

@@ -45,6 +45,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CreateAccountArguments.cs" />
     <Compile Include="CreatePageArguments.cs" />
+    <Compile Include="EditPageArguments.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resources\" />
