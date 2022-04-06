@@ -17,11 +17,6 @@ namespace GingerTG
     {
         public static void Main(string[] args)
         {
-            // SSL fix
-            /*System.Net.ServicePointManager.Expect100Continue = true;
-            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
-            System.Net.ServicePointManager.ServerCertificateValidationCallback = delegate { return true; }; // DEBUG, Linux*/
-
             // Set version for generating semantic version 
             Version version = typeof(MainClass).GetTypeInfo().Assembly.GetName().Version;
 
@@ -102,18 +97,18 @@ namespace GingerTG
                         var client = new TelegraphClient();
 
                         // Create account
-                        var account = client.CreateAccountAsync(createAccountParser.Object.ShortName, createAccountParser.Object.AuthorName, createAccountParser.Object.AuthorUrl);
+                        var account = client.CreateAccountAsync(createAccountParser.Object.ShortName, createAccountParser.Object.AuthorName, createAccountParser.Object.AuthorUrl).Result;
 
                         // Check if OK
-                        if (account.Result.AccessToken.Length > 0)
+                        if (account.AccessToken.Length > 0)
                         {
                             // Set account data
                             string accountData =
-                            $"short_name: {account.Result.ShortName}{Environment.NewLine}" +
-                            $"author_name: {account.Result.AuthorName}{Environment.NewLine}" +
-                            $"author_url: {account.Result.AuthorUrl}{Environment.NewLine}" +
-                            $"access_token: {account.Result.AccessToken}{Environment.NewLine}" +
-                            $"auth_url: {account.Result.AuthorizationUrl}";
+                            $"short_name: {account.ShortName}{Environment.NewLine}" +
+                            $"author_name: {account.AuthorName}{Environment.NewLine}" +
+                            $"author_url: {account.AuthorUrl}{Environment.NewLine}" +
+                            $"access_token: {account.AccessToken}{Environment.NewLine}" +
+                            $"auth_url: {account.AuthorizationUrl}";
 
                             // Set message
                             string createAccountMessage = $"{Environment.NewLine}{Environment.NewLine}Create account / {DateTime.Now}{Environment.NewLine}{accountData}";
@@ -209,23 +204,16 @@ namespace GingerTG
                         // Set token client
                         ITokenClient tokenClient = createPageClient.GetTokenClient(createPageParser.Object.AccessToken);
 
-                        // Set nodes
-                        var nodes = new List<NodeElement>
-                        {
-                            new NodeElement(createPageParser.Object.Content)
-                        };
-
-                        // Set content
-                        NodeElement[] content = nodes.ToArray();
-
                         // Create page
-                        Page createdPage = await tokenClient.CreatePageAsync(
-                          createPageParser.Object.Title,
-                          content,
-                          createPageParser.Object.AuthorName,
-                          createPageParser.Object.AuthorUrl,
-                          createPageParser.Object.ReturnContent
-                        );
+                        Page createdPage = tokenClient.CreatePageAsync(
+                            createPageParser.Object.Title,
+                            new List<NodeElement> {
+                                new NodeElement("p", null, createPageParser.Object.Content)
+                            }.ToArray(),
+                            createPageParser.Object.AuthorName,
+                            createPageParser.Object.AuthorUrl,
+                            createPageParser.Object.ReturnContent
+                        ).Result;
 
                         // Check if OK
                         if (createdPage.Path.Length > 0)
@@ -239,7 +227,7 @@ namespace GingerTG
                             $"author_name: {createdPage.AuthorName}{Environment.NewLine}" +
                             $"author_url: {createdPage.AuthorUrl}{Environment.NewLine}" +
                             $"image_url: {createdPage.ImageUrl}{Environment.NewLine}" +
-                            $"content: {createdPage.Content.ToString()}{Environment.NewLine}" +
+                            $"content: {createdPage.Content}{Environment.NewLine}" +
                             $"views: {createdPage.Views}{Environment.NewLine}" +
                             $"can_edit: {createdPage.CanEdit}{Environment.NewLine}";
 
@@ -286,7 +274,7 @@ namespace GingerTG
 
                     // access_token
                     editPageParser.Setup(arg => arg.AccessToken)
-                        .As('p', "access-token")
+                        .As('k', "access-token")
                         .Required();
 
                     // Path
@@ -342,24 +330,17 @@ namespace GingerTG
                         // Set token client
                         ITokenClient tokenClient = editPageClient.GetTokenClient(editPageParser.Object.AccessToken);
 
-                        // Set nodes
-                        var nodes = new List<NodeElement>
-                        {
-                            new NodeElement(editPageParser.Object.Content)
-                        };
-
-                        // Set content
-                        NodeElement[] content = nodes.ToArray();
-
                         // Edit page
-                        Page editedPage = await tokenClient.EditPageAsync(
-                        editPageParser.Object.Path,
-                        editPageParser.Object.Title,
-                        content,
-                        editPageParser.Object.AuthorName,
-                        editPageParser.Object.AuthorUrl,
-                        editPageParser.Object.ReturnContent
-                        );
+                        Page editedPage = tokenClient.EditPageAsync(
+                            editPageParser.Object.Path,
+                            editPageParser.Object.Title,
+                            new List<NodeElement> {
+                                    new NodeElement("p", null, editPageParser.Object.Content)
+                            }.ToArray(),
+                            editPageParser.Object.AuthorName,
+                            editPageParser.Object.AuthorUrl,
+                            editPageParser.Object.ReturnContent
+                        ).Result;
 
                         // Check if OK
                         if (editedPage.Path.Length > 0)
@@ -373,7 +354,7 @@ namespace GingerTG
                             $"author_name: {editedPage.AuthorName}{Environment.NewLine}" +
                             $"author_url: {editedPage.AuthorUrl}{Environment.NewLine}" +
                             $"image_url: {editedPage.ImageUrl}{Environment.NewLine}" +
-                            $"content: {editedPage.Content.ToString()}{Environment.NewLine}" +
+                            $"content: {editedPage.Content}{Environment.NewLine}" +
                             $"views: {editedPage.Views}{Environment.NewLine}" +
                             $"can_edit: {editedPage.CanEdit}{Environment.NewLine}";
 
@@ -403,13 +384,6 @@ namespace GingerTG
                         // Halt flow
                         return;
                     }
-
-                    break;
-
-                // Get account info
-                case "getAccountInfo":
-
-                    // TODO Add code
 
                     break;
 
@@ -470,7 +444,7 @@ namespace GingerTG
                         var getViewsClient = new TelegraphClient();
 
                         // Get pageViews object
-                        var pageViews = await getViewsClient.GetViewsAsync(getViewsParser.Object.Path, getViewsParser.Object.Year, getViewsParser.Object.Month, getViewsParser.Object.Day, getViewsParser.Object.Hour);
+                        var pageViews = getViewsClient.GetViewsAsync(getViewsParser.Object.Path, getViewsParser.Object.Year, getViewsParser.Object.Month, getViewsParser.Object.Day, getViewsParser.Object.Hour).Result;
 
                         // Get actual views integer
                         int views = pageViews.Views;
