@@ -28,7 +28,7 @@ namespace GingerTG
 
             // Action
             p.Setup<string>('a', "action")
-             .Callback(action => ProcessActionAsync(action, args))
+             .Callback(action => ProcessAction(action, args))
              .Required();
 
             // Parse
@@ -47,7 +47,7 @@ namespace GingerTG
         /// </summary>
         /// <param name="action">Action.</param>
         /// <param name="args">Arguments.</param>
-        private static async void ProcessActionAsync(string action, string[] args)
+        private static void ProcessAction(string action, string[] args)
         {
             // Process implemented methods
             switch (action)
