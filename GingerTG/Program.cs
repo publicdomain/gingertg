@@ -404,7 +404,7 @@ namespace GingerTG
                         .As('p', "path")
                         .Required();
 
-                    // Year
+                    /*// Year
                     getViewsParser.Setup(arg => arg.Year)
                        .As('y', "year");
 
@@ -418,7 +418,7 @@ namespace GingerTG
 
                     // Hour
                     getViewsParser.Setup(arg => arg.Hour)
-                       .As('h', "hour");
+                       .As('h', "hour");*/
 
                     // Parse
                     var getViewsParserResult = getViewsParser.Parse(args);
