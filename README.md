@@ -16,32 +16,32 @@ Targets Microsoft .NET framework v4.5 (Native to Windows 8+)
 
 Create account:
 
--s, --short-name
--n, --author-name
--u, --author-url
+* -s, --short-name
+* -n, --author-name
+* -u, --author-url
 
 Create page:
 
--k, --access-token
--t, --title
--n, --author-name
--u, --author-url
--c, --content
--r, --return-content
+* -k, --access-token
+* -t, --title
+* -n, --author-name
+* -u, --author-url
+* -c, --content
+* -r, --return-content
 
 Edit page:
 
-k, --access-token
-p, --path
-t, --title
-c, --content
-n, --author-name
-u, --author-url
-r, --return-content
+* -k, --access-token
+* -p, --path
+* -t, --title
+* -c, --content
+* -n, --author-name
+* -u, --author-url
+* -r, --return-content
 
 Get views:
 
--p, --path
+* -p, --path
 
 Notes:
 
